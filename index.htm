@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Checkers Test</title></head>
+<body>
+<h1>Сервер работает!</h1>
+<div id="status">WebSocket: соединяемся...</div>
+<script>
+const ws = new WebSocket(`wss://${window.location.host}`);
+ws.onopen = () => document.getElementById('status').innerText = 'WebSocket: подключён';
+ws.onmessage = (e) => console.log('Сообщение от сервера:', e.data);
+ws.onclose = () => document.getElementById('status').innerText = 'WebSocket: отключён';
+</script>
+</body>
+</html>
