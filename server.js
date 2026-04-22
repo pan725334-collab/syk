@@ -3,6 +3,7 @@ const WebSocket = require('ws');
 const path = require('path');
 
 const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
 const server = require('http').createServer(app);
 const wss = new WebSocket.Server({ server });
 
