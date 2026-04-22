@@ -866,32 +866,35 @@
 
             // ========== WEB SOCKET (ОНЛАЙН) ==========
             function connectWebSocket(callback) {
-                if (ws) ws.close();
-                const wsUrl = `wss://${window.location.host}`;
-                ws.onopen = () => {
-                    updateWsStatus('подключён');
-                    showToast("Соединение с сервером установлено", 2000);
-                    if (callback) callback();
-                };
-                ws.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    handleWsMessage(data);
-                };
-                ws.onclose = () => {
-                    updateWsStatus('отключён');
-                    if (onlineMode) {
-                        showToast("Соединение потеряно. Игра завершена.");
-                        onlineMode = false;
-                        returnToMainMenu();
-                    }
-                };
-                ws.onerror = (err) => {
-                    console.error("WebSocket ошибка", err);
-                    updateWsStatus('ошибка');
-                    showToast("Не удалось подключиться к серверу. Убедитесь, что сервер запущен (node server.js) и страница открыта через http://", 5000);
-                };
-            }
-
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        if (callback) callback();
+        return;
+    }
+    const wsUrl = `wss://${window.location.host}`;
+    ws = new WebSocket(wsUrl);
+    ws.onopen = () => {
+        updateWsStatus('подключён');
+        showToast("Соединение с сервером установлено", 2000);
+        if (callback) callback();
+    };
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleWsMessage(data);
+    };
+    ws.onclose = () => {
+        updateWsStatus('отключён');
+        if (onlineMode) {
+            showToast("Соединение потеряно. Игра завершена.");
+            onlineMode = false;
+            returnToMainMenu();
+        }
+    };
+    ws.onerror = (err) => {
+        console.error("WebSocket ошибка", err);
+        updateWsStatus('ошибка');
+        showToast(`Не удалось подключиться к серверу (${wsUrl})`, 5000);
+    };
+}
             function handleWsMessage(data) {
                 switch (data.type) {
                     case 'created':
