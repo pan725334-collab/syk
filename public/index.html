@@ -1082,11 +1082,8 @@
             setupClickHandler();
             resetGame();
             updateStatsModalUI();
-            showToast("Добро пожаловать! Для онлайн-игры запустите сервер (node server.js) и откройте страницу через http://", 5000);
-        } catch (err) {
-            console.error("Ошибка при загрузке игры:", err);
-            alert("Произошла ошибка: " + err.message);
-        }
+            connectWebSocket();          // <--- ЭТО СТРОКА ДОБАВЛЕНА
+            showToast("Добро пожаловать! Игра готова к игре по сети.", 3000);
     </script>
 </body>
 </html>
