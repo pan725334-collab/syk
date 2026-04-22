@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Пешки — 3D шашки | Онлайн игра с другом</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0a1a;
+            overflow: hidden;
+        }
+        .title-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a2a2c 0%, #0f1a1c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            overflow-y: auto;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .title-screen.hidden { display: none; }
+        .title-container {
+            background: rgba(20,28,30,0.85);
+            backdrop-filter: blur(14px);
+            border-radius: 56px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 1100px;
+            border: 1px solid rgba(212,175,55,0.4);
+            margin: auto;
+            box-sizing: border-box;
+        }
+        .game-header { text-align: center; margin-bottom: 1.5rem; }
+        .game-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #f9e0a0, #d4af37, #b8860b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin: 0;
+        }
+        .top-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .icon-btn {
+            background: rgba(30,45,48,0.8);
+            border: 1px solid #d4af37;
+            border-radius: 40px;
+            padding: 0.5rem 1rem;
+            color: #f2e8cf;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            touch-action: manipulation;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .card {
+            background: rgba(10,18,20,0.7);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            border: 1px solid rgba(212,175,55,0.35);
+        }
+        .card-title {
+            font-size: 1.2rem;
+            color: #f2e8cf;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid #d4af37;
+            padding-left: 0.8rem;
+        }
+        .btn {
+            background: linear-gradient(95deg, #2c3a3e, #1e2a2c);
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 60px;
+            font-weight: bold;
+            color: #f0efea;
+            cursor: pointer;
+            margin-bottom: 0.8rem;
+            font-size: 0.95rem;
+            touch-action: manipulation;
+        }
+        .btn-primary {
+            background: linear-gradient(95deg, #d4af37, #b8860b);
+            color: #1e2a2c;
+        }
+        .difficulty-group, .color-group {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .difficulty-option, .color-option {
+            flex: 1;
+            background: #1f2f32;
+            text-align: center;
+            padding: 8px 4px;
+            border-radius: 40px;
+            cursor: pointer;
+            color: #cfdfe2;
+            border: 1px solid rgba(212,175,55,0.3);
+            font-size: 0.85rem;
+            touch-action: manipulation;
+        }
+        .difficulty-option.active, .color-option.active {
+            background: #d4af37;
+            color: #0f1a1c;
+        }
+        .online-stats {
+            background: rgba(0,0,0,0.4);
+            border-radius: 1.2rem;
+            padding: 0.8rem;
+        }
+        .online-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 6px 0;
+            color: #f5e2b0;
+            font-size: 0.9rem;
+        }
+        .invite-section {
+            margin-top: 1rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 1.2rem;
+            padding: 0.8rem;
+        }
+        .invite-input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .invite-input-group input {
+            flex: 1;
+            background: #1f2f32;
+            border: 1px solid #d4af37;
+            border-radius: 40px;
+            padding: 10px 12px;
+            color: white;
+            outline: none;
+            font-size: 0.9rem;
+        }
+        .invite-input-group button {
+            background: #d4af37;
+            border: none;
+            border-radius: 40px;
+            padding: 0 16px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1e2a2c;
+            touch-action: manipulation;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.65rem;
+            color: #7f9499;
+            margin-top: 1rem;
+        }
+        .toast-msg {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e2a2cee;
+            backdrop-filter: blur(12px);
+            color: #f5e2b0;
+            padding: 6px 16px;
+            border-radius: 40px;
+            z-index: 1000;
+            font-size: 0.85rem;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .modal-content {
+            background: #1e2a2c;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            min-width: 250px;
+            max-width: 90%;
+            border: 1px solid #d4af37;
+            color: #f2e8cf;
+            text-align: center;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: #d4af37;
+        }
+        .invite-link-container {
+            background: #0f1a1c;
+            border-radius: 2rem;
+            padding: 0.6rem;
+            margin: 1rem 0;
+            word-break: break-all;
+            font-family: monospace;
+        }
+        .invite-link-container input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #d4af37;
+            font-size: 0.85rem;
+            outline: none;
+            text-align: center;
+        }
+        #gameContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+        .control-buttons {
+            position: absolute;
+            bottom: 20px;
+            right: 15px;
+            z-index: 25;
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+        .ctrl-btn {
+            background: #d4af37;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1e2a2c;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-size: 13px;
+            touch-action: manipulation;
+        }
+        /* Адаптация для телефонов */
+        @media (max-width: 700px) {
+            .title-container {
+                padding: 1rem;
+            }
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .game-header h1 {
+                font-size: 2rem;
+            }
+            .icon-btn, .btn, .difficulty-option, .color-option {
+                font-size: 0.85rem;
+                padding: 8px 10px;
+            }
+            .card-title {
+                font-size: 1.1rem;
+            }
+            .online-row {
+                font-size: 0.8rem;
+            }
+            .invite-input-group input {
+                font-size: 0.85rem;
+                padding: 8px 10px;
+            }
+            .ctrl-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .toast-msg {
+                white-space: normal;
+                text-align: center;
+                max-width: 80%;
+            }
+        }
+        @media (max-width: 480px) {
+            .game-header h1 {
+                font-size: 1.6rem;
+            }
+            .title-container {
+                padding: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="titleScreen" class="title-screen">
+        <div class="title-container">
+            <div class="top-actions">
+                <button id="statsBtn" class="icon-btn"><i class="fas fa-chart-simple"></i> Статистика</button>
+                <button id="settingsBtn" class="icon-btn"><i class="fas fa-sliders-h"></i> Настройки</button>
+                <button id="inviteFriendBtn" class="icon-btn"><i class="fas fa-user-plus"></i> Пригласить друга</button>
+            </div>
+            <div class="game-header">
+                <h1><i class="fas fa-chess-pawn"></i> ПЕШКИ <i class="fas fa-chess-pawn"></i></h1>
+                <p>3D Шашки | ИГРАЙ С ДРУГОМ ПО СЕТИ ИЛИ С БОТОМ</p>
+            </div>
+            <div class="dashboard">
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-gamepad"></i> Управление</div>
+                    <button id="newGameBtn" class="btn btn-primary"><span>🎮</span> Новая игра (с ботом)</button>
+                    <div>Уровень противника (бота):</div>
+                    <div class="difficulty-group" id="difficultySelector">
+                        <div data-diff="easy" class="difficulty-option active">Легкий</div>
+                        <div data-diff="medium" class="difficulty-option">Средний</div>
+                        <div data-diff="hard" class="difficulty-option">Сложный</div>
+                    </div>
+                    <div>Цвет фигур игрока (против бота):</div>
+                    <div class="color-group" id="colorSelector">
+                        <div data-color="white" class="color-option active">Белые</div>
+                        <div data-color="black" class="color-option">Чёрные</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-network-wired"></i> Онлайн игра</div>
+                    <div class="online-stats">
+                        <div class="online-row"><span>🔌 WebSocket сервер:</span><span id="wsStatus">не подключён</span></div>
+                        <div class="online-row"><span>💡 Совет:</span><span style="font-size:0.75rem;">На телефоне откройте по IP компьютера</span></div>
+                    </div>
+                    <div class="invite-section">
+                        <div style="margin-bottom: 8px;"><i class="fas fa-link"></i> Подключиться к другу</div>
+                        <div class="invite-input-group">
+                            <input type="text" id="joinCodeInput" placeholder="Введите код комнаты">
+                            <button id="joinOnlineBtn">Подключиться</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer>3D доска | Белые ходят первыми | Коснитесь фигуры для выбора</footer>
+        </div>
+    </div>
+
+    <!-- Модальное окно с кодом комнаты -->
+    <div id="inviteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><span><i class="fas fa-user-plus"></i> Пригласить друга</span><button class="close-modal" id="closeInviteModalBtn">&times;</button></div>
+            <p>Скопируйте код и отправьте другу. Он должен нажать «Подключиться» и ввести этот код.</p>
+            <div class="invite-link-container">
+                <input type="text" id="roomCodeDisplay" readonly value="">
+            </div>
+            <button id="copyRoomCodeBtn" class="btn btn-primary"><i class="fas fa-copy"></i> Скопировать код</button>
+        </div>
+    </div>
+
+    <div id="statsModal" class="modal"><div class="modal-content"><div class="modal-header"><span>📊 Статистика</span><button class="close-modal" data-modal="statsModal">&times;</button></div><div id="statsContent"><p>Всего партий: <span id="totalGames">0</span></p><p>Победы: <span id="winsCount">0</span></p><p>Поражения: <span id="lossesCount">0</span></p><p>Ничьи: <span id="drawsCount">0</span></p></div></div></div>
+    <div id="settingsModal" class="modal"><div class="modal-content"><div class="modal-header"><span>⚙️ Настройки</span><button class="close-modal" data-modal="settingsModal">&times;</button></div><div class="setting-item"><label>🔊 Громкость звука</label><input type="range" id="volumeSlider" min="0" max="100" value="65"><span id="volumeVal">65%</span></div><div class="setting-item"><label>⚡ Скорость фигур</label><input type="range" id="speedSlider" min="0.5" max="3" step="0.05" value="1.5"><span id="speedVal">1.5x</span></div></div></div>
+
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><span id="gameOverTitle">Игра окончена</span><button class="close-modal" id="closeGameOverModal">&times;</button></div>
+            <p id="gameOverMessage"></p>
+            <button id="gameOverOkBtn" class="btn btn-primary" style="margin-top: 1rem;">Ок</button>
+        </div>
+    </div>
+
+    <div id="gameContainer"></div>
+    <div class="control-buttons" id="controlButtons" style="display: none;">
+        <button id="pauseButton" class="ctrl-btn">⏸️ Пауза</button>
+        <button id="freezeCameraBtn" class="ctrl-btn">❄️ Заморозить доску</button>
+        <button id="exitToMenuBtn" class="ctrl-btn">🚪 Выход</button>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        const originalConsoleWarn = console.warn;
+        console.warn = (...args) => {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('WebAssembly.instantiateStreaming')) return;
+            originalConsoleWarn.apply(console, args);
+        };
+
+        try {
+            // ========== ОСНОВНЫЕ ПЕРЕМЕННЫЕ ==========
+            let currentDifficulty = 'easy';
+            let playerColor = 'white';
+            let playerStats = { totalGames: 124, wins: 68, losses: 44, draws: 12 };
+            let volume = 65, moveSpeed = 1.5;
+            let paused = false;
+            let cameraFrozen = false;
+
+            let board = Array(8).fill().map(() => Array(8).fill(0));
+            let gameOver = false;
+            let selectedRow = null, selectedCol = null;
+            let possibleMoves = [];
+            let whoseTurn = 'white';
+            let botColor = (playerColor === 'white') ? 'black' : 'white';
+
+            // WebSocket онлайн режим
+            let ws = null;
+            let onlineMode = false;
+            let myColor = null;
+            let roomCode = null;
+            let waitingForOpponent = false;
+
+            // 3D переменные
+            let scene, camera, renderer, labelRenderer, controls;
+            let piecesGroup;
+            let tiles = [];
+            let pieceMeshes = [];
+            let labelGroup; // группа для CSS2D меток
+            const cellSize = 0.55;
+            let raycaster = new THREE.Raycaster();
+            let audioCtx = null;
+
+            // ========== УПРАВЛЕНИЕ КНОПКАМИ ==========
+            const controlButtonsDiv = document.getElementById('controlButtons');
+            function showControlButtons(show) {
+                controlButtonsDiv.style.display = show ? 'flex' : 'none';
+            }
+
+            // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+            function showToast(msg, dur = 2000) {
+                let existing = document.querySelector('.toast-msg');
+                if (existing) existing.remove();
+                const toast = document.createElement('div');
+                toast.className = 'toast-msg';
+                toast.textContent = msg;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), dur);
+            }
+
+            function updateStatsModalUI() {
+                document.getElementById('totalGames').innerText = playerStats.totalGames;
+                document.getElementById('winsCount').innerText = playerStats.wins;
+                document.getElementById('lossesCount').innerText = playerStats.losses;
+                document.getElementById('drawsCount').innerText = playerStats.draws;
+            }
+
+            function updateWsStatus(status) {
+                const el = document.getElementById('wsStatus');
+                if (el) el.innerText = status;
+                if (status === 'подключён') {
+                    document.getElementById('inviteFriendBtn').style.opacity = '1';
+                    document.getElementById('inviteFriendBtn').style.pointerEvents = 'auto';
+                } else {
+                    document.getElementById('inviteFriendBtn').style.opacity = '0.6';
+                    document.getElementById('inviteFriendBtn').style.pointerEvents = 'none';
+                }
+            }
+
+            // ========== ЗВУК ==========
+            function initAudio() {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            function playSound(type) {
+                if (!audioCtx) return;
+                const gain = audioCtx.createGain();
+                gain.gain.value = volume / 100;
+                const osc = audioCtx.createOscillator();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+                if (type === 'move') { osc.frequency.value = 440; osc.type = 'sine'; gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2); osc.start(); osc.stop(now + 0.2); }
+                else if (type === 'capture') { osc.frequency.value = 220; osc.type = 'triangle'; gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); osc.start(); osc.stop(now + 0.3); }
+                else if (type === 'win') { osc.frequency.value = 660; osc.type = 'sine'; gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5); osc.start(); osc.stop(now + 0.5); }
+                else if (type === 'lose') { osc.frequency.value = 110; osc.type = 'sawtooth'; gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6); osc.start(); osc.stop(now + 0.6); }
+            }
+
+            // ========== 3D СЦЕНА (улучшенные фигуры) ==========
+            function init3D() {
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x87CEEB);
+                scene.fog = new THREE.FogExp2(0x87CEEB, 0.008);
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(5, 4.5, 6);
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMap.enabled = true;
+                document.getElementById('gameContainer').appendChild(renderer.domElement);
+                labelRenderer = new CSS2DRenderer();
+                labelRenderer.setSize(window.innerWidth, window.innerHeight);
+                labelRenderer.domElement.style.position = 'absolute';
+                labelRenderer.domElement.style.top = '0px';
+                labelRenderer.domElement.style.left = '0px';
+                labelRenderer.domElement.style.pointerEvents = 'none';
+                document.getElementById('gameContainer').appendChild(labelRenderer.domElement);
+                controls = new OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.enableTouchRotate = true;
+                controls.enableZoom = true;
+                controls.zoomSpeed = 1.2;
+                controls.target.set(0, 0.2, 0);
+                controls.enabled = true;
+
+                const ambient = new THREE.AmbientLight(0x404060, 0.6);
+                scene.add(ambient);
+                const sunLight = new THREE.DirectionalLight(0xfff5e0, 1.2);
+                sunLight.position.set(5, 10, 3);
+                sunLight.castShadow = true;
+                scene.add(sunLight);
+                const fillLight = new THREE.PointLight(0xaa8866, 0.4);
+                fillLight.position.set(0, 1, 0);
+                scene.add(fillLight);
+
+                const waterPlane = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.MeshStandardMaterial({ color: 0x3a8cba, metalness: 0.85, roughness: 0.2, transparent: true, opacity: 0.9 }));
+                waterPlane.rotation.x = -Math.PI / 2;
+                waterPlane.position.y = -0.9;
+                waterPlane.receiveShadow = true;
+                scene.add(waterPlane);
+                const groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ color: 0x5c9e5e, roughness: 0.8 }));
+                groundPlane.rotation.x = -Math.PI / 2;
+                groundPlane.position.y = -0.75;
+                groundPlane.receiveShadow = true;
+                scene.add(groundPlane);
+
+                for (let i = 0; i < 8; i++) {
+                    for (let j = 0; j < 8; j++) {
+                        const isWhite = (i + j) % 2 === 0;
+                        const mat = new THREE.MeshStandardMaterial({ color: isWhite ? 0xffffff : 0x000000, emissive: 0x000000, emissiveIntensity: 0 });
+                        const tile = new THREE.Mesh(new THREE.BoxGeometry(cellSize, 0.08, cellSize), mat);
+                        const x = (j - 3.5) * cellSize;
+                        const z = (i - 3.5) * cellSize;
+                        tile.position.set(x, 0, z);
+                        tile.castShadow = true;
+                        tile.receiveShadow = true;
+                        scene.add(tile);
+                        tiles.push({ mesh: tile, row: i, col: j, material: mat });
+                    }
+                }
+
+                const totalWidth = cellSize * 8;
+                const boardExtent = totalWidth / 2;
+                const borderMat = new THREE.MeshStandardMaterial({ color: 0xc8a87c });
+                const addBorder = (x, z, sx, sz) => {
+                    const box = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.12, sz), borderMat);
+                    box.position.set(x, 0.04, z);
+                    scene.add(box);
+                };
+                addBorder(0, boardExtent + 0.07, totalWidth + 0.14, 0.12);
+                addBorder(0, -boardExtent - 0.07, totalWidth + 0.14, 0.12);
+                addBorder(boardExtent + 0.07, 0, 0.12, totalWidth);
+                addBorder(-boardExtent - 0.07, 0, 0.12, totalWidth);
+
+                // Создаём группу для меток, чтобы потом динамически менять размер шрифта
+                labelGroup = new THREE.Group();
+                scene.add(labelGroup);
+                const letters = ['A','B','C','D','E','F','G','H'];
+                const numbers = ['1','2','3','4','5','6','7','8'];
+                const makeLabel = (text, y, x, z, baseSize = 18) => {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    div.style.color = '#f7eac5';
+                    div.style.fontWeight = 'bold';
+                    div.style.background = 'rgba(30,20,10,0.6)';
+                    div.style.padding = '2px 8px';
+                    div.style.borderRadius = '30px';
+                    div.style.border = '1px solid #d4af37';
+                    div.style.fontSize = baseSize + 'px';
+                    div.style.fontFamily = 'monospace';
+                    const label = new CSS2DObject(div);
+                    label.position.set(x, y, z);
+                    label.userData = { baseSize, text };
+                    return label;
+                };
+                for (let i = 0; i < 8; i++) {
+                    const xPos = (i - 3.5) * cellSize;
+                    labelGroup.add(makeLabel(letters[i], 0.25, xPos, boardExtent+0.2, 18));
+                    labelGroup.add(makeLabel(letters[i], -0.12, xPos, -boardExtent-0.2, 18));
+                    const zPos = (i - 3.5) * cellSize;
+                    labelGroup.add(makeLabel(numbers[i], -0.12, -boardExtent-0.25, zPos, 18));
+                    labelGroup.add(makeLabel(numbers[i], -0.12, boardExtent+0.25, zPos, 18));
+                }
+
+                piecesGroup = new THREE.Group();
+                scene.add(piecesGroup);
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    controls.update();
+                    renderer.render(scene, camera);
+                    labelRenderer.render(scene, camera);
+                    // Динамическое масштабирование шрифта меток в зависимости от расстояния камеры
+                    if (labelGroup) {
+                        const distance = camera.position.distanceTo(new THREE.Vector3(0, 0.2, 0));
+                        const scaleFactor = Math.max(0.5, Math.min(2.5, 8 / distance * 2.5));
+                        labelGroup.children.forEach(label => {
+                            const base = label.userData.baseSize || 18;
+                            const newSize = Math.floor(base * scaleFactor);
+                            label.element.style.fontSize = newSize + 'px';
+                        });
+                    }
+                }
+                animate();
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+
+            function resetCamera() {
+                camera.position.set(5, 4.5, 6);
+                controls.target.set(0, 0.2, 0);
+                controls.update();
+            }
+
+            function createPieceMesh(isWhite, isKing = false) {
+                const group = new THREE.Group();
+                const bodyColor = isWhite ? 0xf0e6d0 : 0x2c2c2c;
+                const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, metalness: 0.85, roughness: 0.25, emissive: 0x000000 });
+                const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.95, roughness: 0.2 });
+                
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.23, 0.12, 48), bodyMat);
+                body.castShadow = true;
+                group.add(body);
+                
+                const dome = new THREE.Mesh(new THREE.SphereGeometry(0.21, 48, 48), bodyMat);
+                dome.scale.set(1, 0.45, 1);
+                dome.position.y = 0.08;
+                group.add(dome);
+                
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.016, 64, 128), goldMat);
+                ring.rotation.x = Math.PI/2;
+                ring.position.y = 0.07;
+                group.add(ring);
+                
+                const knob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 32, 32), goldMat);
+                knob.position.y = 0.17;
+                group.add(knob);
+                
+                if (isKing) {
+                    const crownBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.07, 8), goldMat);
+                    crownBase.position.y = 0.22;
+                    group.add(crownBase);
+                    const crownTop = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.06, 8), goldMat);
+                    crownTop.position.y = 0.27;
+                    group.add(crownTop);
+                    const star = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), goldMat);
+                    star.position.y = 0.31;
+                    group.add(star);
+                }
+                
+                group.traverse(child => { if(child.isMesh) child.raycast = false; });
+                return group;
+            }
+
+            function updateAllPieces() {
+                while(piecesGroup.children.length) piecesGroup.remove(piecesGroup.children[0]);
+                pieceMeshes = Array(8).fill().map(() => Array(8).fill(null));
+                for (let i = 0; i < 8; i++) {
+                    for (let j = 0; j < 8; j++) {
+                        const val = board[i][j];
+                        if (val !== 0) {
+                            const isWhite = val > 0;
+                            const isKing = Math.abs(val) === 2;
+                            const piece = createPieceMesh(isWhite, isKing);
+                            const x = (j - 3.5) * cellSize;
+                            const z = (i - 3.5) * cellSize;
+                            piece.position.set(x, 0.07, z);
+                            piecesGroup.add(piece);
+                            pieceMeshes[i][j] = piece;
+                        }
+                    }
+                }
+            }
+
+            async function animateMove(fromRow, fromCol, toRow, toCol, callback) {
+                const piece = pieceMeshes[fromRow][fromCol];
+                if (!piece) { callback(); return; }
+                const targetX = (toCol - 3.5) * cellSize;
+                const targetZ = (toRow - 3.5) * cellSize;
+                const startPos = piece.position.clone();
+                const duration = 200 / moveSpeed;
+                const startTime = performance.now();
+                function step(now) {
+                    const t = Math.min(1, (now - startTime) / duration);
+                    const ease = 1 - Math.pow(1-t, 2);
+                    piece.position.x = startPos.x + (targetX - startPos.x) * ease;
+                    piece.position.z = startPos.z + (targetZ - startPos.z) * ease;
+                    if (t < 1) requestAnimationFrame(step);
+                    else {
+                        piece.position.set(targetX, 0.07, targetZ);
+                        pieceMeshes[toRow][toCol] = piece;
+                        pieceMeshes[fromRow][fromCol] = null;
+                        callback();
+                    }
+                }
+                requestAnimationFrame(step);
+            }
+
+            // ========== ЛОГИКА ШАШЕК ==========
+            function isWithinBoard(r,c) { return r>=0 && r<8 && c>=0 && c<8; }
+            function isPromotion(row, piece) { return (piece===1 && row===0) || (piece===-1 && row===7); }
+            function copyBoardFrom(b) { return b.map(row => [...row]); }
+            
+            function applyMoveToBoardState(boardState, move) {
+                let piece = boardState[move.fromRow][move.fromCol];
+                boardState[move.toRow][move.toCol] = piece;
+                boardState[move.fromRow][move.fromCol] = 0;
+                for(let cap of move.captures) boardState[cap.row][cap.col] = 0;
+                if(move.promotion) boardState[move.toRow][move.toCol] = (piece>0 ? 2 : -2);
+            }
+
+            function getCapturesFromState(boardState, row, col, piece) {
+                let results = [];
+                let isKing = Math.abs(piece)===2;
+                let dirs = isKing ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (piece===1 ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+                if(isKing) {
+                    for(let d of dirs) {
+                        let dr=d[0], dc=d[1];
+                        let r=row+dr, c=col+dc;
+                        let jumped=false, jumpRow=-1, jumpCol=-1;
+                        while(isWithinBoard(r,c)) {
+                            if(boardState[r][c]!==0) {
+                                if(!jumped && ((piece>0 && boardState[r][c]<0)||(piece<0 && boardState[r][c]>0))) {
+                                    jumped=true; jumpRow=r; jumpCol=c; r+=dr; c+=dc; continue;
+                                } else break;
+                            } else {
+                                if(jumped) {
+                                    let cap = { fromRow:row, fromCol:col, toRow:r, toCol:c, captures:[{row:jumpRow, col:jumpCol, piece:boardState[jumpRow][jumpCol]}], isCapture:true, promotion:false };
+                                    let temp = copyBoardFrom(boardState);
+                                    applyMoveToBoardState(temp, cap);
+                                    let newPiece = isPromotion(r, piece) ? (piece>0?2:-2) : piece;
+                                    let next = getCapturesFromState(temp, r, c, newPiece);
+                                    if(next.length) for(let nc of next) results.push({...cap, toRow:nc.toRow, toCol:nc.toCol, captures:[...cap.captures, ...nc.captures], promotion:isPromotion(nc.toRow, piece)});
+                                    else { cap.promotion = isPromotion(r, piece); results.push(cap); }
+                                }
+                                break;
+                            }
+                            r+=dr; c+=dc;
+                        }
+                    }
+                } else {
+                    for(let d of dirs) {
+                        let r=row+d[0], c=col+d[1];
+                        if(isWithinBoard(r,c) && boardState[r][c]!==0 && ((piece>0 && boardState[r][c]<0)||(piece<0 && boardState[r][c]>0))) {
+                            let jumpRow=r, jumpCol=c;
+                            let landRow=r+d[0], landCol=c+d[1];
+                            if(isWithinBoard(landRow,landCol) && boardState[landRow][landCol]===0) {
+                                let cap = { fromRow:row, fromCol:col, toRow:landRow, toCol:landCol, captures:[{row:jumpRow, col:jumpCol, piece:boardState[jumpRow][jumpCol]}], isCapture:true, promotion:false };
+                                let temp = copyBoardFrom(boardState);
+                                applyMoveToBoardState(temp, cap);
+                                let newPiece = isPromotion(landRow, piece) ? (piece>0?2:-2) : piece;
+                                let next = getCapturesFromState(temp, landRow, landCol, newPiece);
+                                if(next.length) for(let nc of next) results.push({...cap, toRow:nc.toRow, toCol:nc.toCol, captures:[...cap.captures, ...nc.captures], promotion:isPromotion(nc.toRow, piece)});
+                                else { cap.promotion = isPromotion(landRow, piece); results.push(cap); }
+                            }
+                        }
+                    }
+                }
+                return results;
+            }
+
+            function getSimpleMovesState(boardState, row, col, piece) {
+                let moves=[];
+                let isKing=Math.abs(piece)===2;
+                let dirs=isKing?[[-1,-1],[-1,1],[1,-1],[1,1]]:(piece===1?[[-1,-1],[-1,1]]:[[1,-1],[1,1]]);
+                if(isKing) {
+                    for(let d of dirs) {
+                        let r=row+d[0], c=col+d[1];
+                        while(isWithinBoard(r,c) && boardState[r][c]===0) {
+                            moves.push({fromRow:row, fromCol:col, toRow:r, toCol:c, captures:[], isCapture:false, promotion:isPromotion(r,piece)});
+                            r+=d[0]; c+=d[1];
+                        }
+                    }
+                } else {
+                    for(let d of dirs) {
+                        let r=row+d[0], c=col+d[1];
+                        if(isWithinBoard(r,c) && boardState[r][c]===0)
+                            moves.push({fromRow:row, fromCol:col, toRow:r, toCol:c, captures:[], isCapture:false, promotion:isPromotion(r,piece)});
+                    }
+                }
+                return moves;
+            }
+
+            function getAllMovesForPlayerState(boardState, player) {
+                let moves = [], mandatory = [];
+                for(let i=0;i<8;i++) for(let j=0;j<8;j++) {
+                    let piece = boardState[i][j];
+                    if((player===1 && (piece===1||piece===2)) || (player===-1 && (piece===-1||piece===-2))) {
+                        let caps = getCapturesFromState(boardState, i, j, piece);
+                        for(let c of caps) mandatory.push(c);
+                    }
+                }
+                if(mandatory.length) return mandatory;
+                for(let i=0;i<8;i++) for(let j=0;j<8;j++) {
+                    let piece = boardState[i][j];
+                    if((player===1 && (piece===1||piece===2)) || (player===-1 && (piece===-1||piece===-2))) {
+                        let simple = getSimpleMovesState(boardState, i, j, piece);
+                        moves.push(...simple);
+                    }
+                }
+                return moves;
+            }
+
+            function isGameOverState(boardState, player) { return getAllMovesForPlayerState(boardState, player).length === 0; }
+
+            // ========== ОЦЕНОЧНЫЕ ФУНКЦИИ ДЛЯ БОТА ==========
+            function evalSimpleForSide(boardState, side) {
+                let white=0, black=0;
+                for(let i=0;i<8;i++) for(let j=0;j<8;j++) {
+                    let p=boardState[i][j];
+                    if(p===1) white+=10; else if(p===2) white+=30;
+                    else if(p===-1) black+=10; else if(p===-2) black+=30;
+                }
+                let raw = white - black;
+                return side === 1 ? raw : -raw;
+            }
+
+            function evalAdvancedForSide(boardState, side) {
+                let white=0, black=0;
+                const pawnTable = [
+                    [0,0,0,0,0,0,0,0],
+                    [0,1,2,3,4,3,2,1],
+                    [1,2,3,5,5,3,2,1],
+                    [2,4,6,8,8,6,4,2],
+                    [3,5,7,9,9,7,5,3],
+                    [4,6,8,10,10,8,6,4],
+                    [5,7,9,11,11,9,7,5],
+                    [0,0,0,0,0,0,0,0]
+                ];
+                for(let i=0;i<8;i++) for(let j=0;j<8;j++) {
+                    let p=boardState[i][j];
+                    if(p===1) white += 100 + pawnTable[i][j];
+                    else if(p===2) white += 300 + pawnTable[i][j]*2;
+                    else if(p===-1) black += 100 + pawnTable[7-i][j];
+                    else if(p===-2) black += 300 + pawnTable[7-i][j]*2;
+                }
+                let raw = white - black;
+                return side === 1 ? raw : -raw;
+            }
+
+            function minimaxGeneric(boardState, depth, maximizingSide, botSide, evalFunc) {
+                if(depth===0 || isGameOverState(boardState, maximizingSide)) return evalFunc(boardState, botSide);
+                let moves = getAllMovesForPlayerState(boardState, maximizingSide);
+                if(moves.length===0) return evalFunc(boardState, botSide);
+                if(maximizingSide === botSide) {
+                    let maxVal = -Infinity;
+                    for(let m of moves) {
+                        let nb = copyBoardFrom(boardState);
+                        applyMoveToBoardState(nb, m);
+                        let val = minimaxGeneric(nb, depth-1, -maximizingSide, botSide, evalFunc);
+                        if(val > maxVal) maxVal = val;
+                    }
+                    return maxVal;
+                } else {
+                    let minVal = Infinity;
+                    for(let m of moves) {
+                        let nb = copyBoardFrom(boardState);
+                        applyMoveToBoardState(nb, m);
+                        let val = minimaxGeneric(nb, depth-1, -maximizingSide, botSide, evalFunc);
+                        if(val < minVal) minVal = val;
+                    }
+                    return minVal;
+                }
+            }
+
+            function getBestMoveSimple(boardState, botSide, depth, errorChance) {
+                let moves = getAllMovesForPlayerState(boardState, botSide);
+                if(moves.length===0) return null;
+                if(Math.random() < errorChance) return moves[Math.floor(Math.random()*moves.length)];
+                let bestMoves=[], bestVal=-Infinity;
+                for(let m of moves) {
+                    let nb = copyBoardFrom(boardState);
+                    applyMoveToBoardState(nb, m);
+                    let val = minimaxGeneric(nb, depth-1, -botSide, botSide, evalSimpleForSide);
+                    if(val > bestVal) { bestVal=val; bestMoves=[m]; }
+                    else if(Math.abs(val-bestVal)<1e-5) bestMoves.push(m);
+                }
+                return bestMoves[Math.floor(Math.random()*bestMoves.length)];
+            }
+
+            function alphaBetaGeneric(boardState, depth, alpha, beta, maximizingSide, botSide, evalFunc) {
+                if(depth===0 || isGameOverState(boardState, maximizingSide)) return evalFunc(boardState, botSide);
+                let moves = getAllMovesForPlayerState(boardState, maximizingSide);
+                if(moves.length===0) return evalFunc(boardState, botSide);
+                if(maximizingSide === botSide) {
+                    let value = -Infinity;
+                    for(let m of moves) {
+                        let nb = copyBoardFrom(boardState);
+                        applyMoveToBoardState(nb, m);
+                        value = Math.max(value, alphaBetaGeneric(nb, depth-1, alpha, beta, -maximizingSide, botSide, evalFunc));
+                        alpha = Math.max(alpha, value);
+                        if(beta <= alpha) break;
+                    }
+                    return value;
+                } else {
+                    let value = Infinity;
+                    for(let m of moves) {
+                        let nb = copyBoardFrom(boardState);
+                        applyMoveToBoardState(nb, m);
+                        value = Math.min(value, alphaBetaGeneric(nb, depth-1, alpha, beta, -maximizingSide, botSide, evalFunc));
+                        beta = Math.min(beta, value);
+                        if(beta <= alpha) break;
+                    }
+                    return value;
+                }
+            }
+
+            function getBestMoveHard(boardState, botSide, depth=4) {
+                let moves = getAllMovesForPlayerState(boardState, botSide);
+                if(moves.length===0) return null;
+                let bestMove = null, bestVal = -Infinity;
+                for(let m of moves) {
+                    let nb = copyBoardFrom(boardState);
+                    applyMoveToBoardState(nb, m);
+                    let val = alphaBetaGeneric(nb, depth-1, -Infinity, Infinity, -botSide, botSide, evalAdvancedForSide);
+                    if(val > bestVal) { bestVal = val; bestMove = m; }
+                }
+                return bestMove;
+            }
+
+            // ========== ИГРОВЫЕ ДЕЙСТВИЯ ==========
+            async function executeMove(move, isBot = false) {
+                await animateMove(move.fromRow, move.fromCol, move.toRow, move.toCol, () => {});
+                if (move.captures.length > 0) playSound('capture');
+                else playSound('move');
+                applyMoveToBoardState(board, move);
+                updateAllPieces();
+
+                const whiteHasMoves = !isGameOverState(board, 1);
+                const blackHasMoves = !isGameOverState(board, -1);
+                if (!whiteHasMoves || !blackHasMoves) {
+                    let winnerColor = null;
+                    if (!whiteHasMoves) winnerColor = 'black';
+                    else if (!blackHasMoves) winnerColor = 'white';
+                    if (winnerColor) {
+                        const playerWon = (onlineMode ? (myColor === winnerColor) : (playerColor === winnerColor));
+                        finishGame(playerWon ? 'win' : 'loss');
+                        if (onlineMode && ws && ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify({ type: 'gameOver', roomCode, result: playerWon ? 'win' : 'loss' }));
+                        }
+                        return;
+                    }
+                }
+
+                whoseTurn = (whoseTurn === 'white') ? 'black' : 'white';
+                updateStatus();
+
+                if (onlineMode && ws && ws.readyState === WebSocket.OPEN && !isBot) {
+                    ws.send(JSON.stringify({ type: 'move', roomCode, move, gameState: board }));
+                }
+                if (!onlineMode && !gameOver && whoseTurn === botColor && !paused) {
+                    setTimeout(() => botMove(), 150);
+                }
+            }
+
+            async function botMove() {
+                if (paused || gameOver || onlineMode) return;
+                if (whoseTurn !== botColor) return;
+                const botNumeric = (botColor === 'white') ? 1 : -1;
+                let best = null;
+                if(currentDifficulty === 'easy') best = getBestMoveSimple(board, botNumeric, 1, 0.55);
+                else if(currentDifficulty === 'medium') best = getBestMoveSimple(board, botNumeric, 3, 0.15);
+                else best = getBestMoveHard(board, botNumeric, 5);
+                if (best) await executeMove(best, true);
+                else finishGame('win');
+            }
+
+            function finishGame(result) {
+                if (gameOver) return;
+                gameOver = true;
+                let message = '';
+                if(result === 'win') {
+                    playerStats.wins++; playerStats.totalGames++; playSound('win');
+                    message = 'Победа! 🎉 Вы выиграли партию!';
+                } else {
+                    playerStats.losses++; playerStats.totalGames++; playSound('lose');
+                    message = 'Поражение... 💀 Попробуйте ещё раз!';
+                }
+                updateStatsModalUI();
+                document.getElementById('gameOverTitle').innerText = result === 'win' ? '🏆 Победа!' : '💀 Поражение';
+                document.getElementById('gameOverMessage').innerText = message;
+                document.getElementById('gameOverModal').style.display = 'flex';
+                showControlButtons(false);
+            }
+
+            function returnToMainMenu() {
+                onlineMode = false;
+                myColor = null;
+                roomCode = null;
+                waitingForOpponent = false;
+                document.getElementById('gameOverModal').style.display = 'none';
+                document.getElementById('titleScreen').classList.remove('hidden');
+                gameOver = true;
+                paused = false;
+                cameraFrozen = false;
+                controls.enabled = true;
+                document.getElementById('freezeCameraBtn').textContent = '❄️ Заморозить доску';
+                document.getElementById('pauseButton').textContent = '⏸️ Пауза';
+                resetCamera();
+                showControlButtons(false);
+                resetGame(); // сброс доски, но без показа кнопок (они уже скрыты)
+                // После возврата в меню кнопки управления должны быть скрыты, что и сделано
+            }
+
+            // ========== ПОДСВЕТКА ==========
+            function highlightTile(row, col, intensity, colorHex) {
+                const tileData = tiles.find(t => t.row === row && t.col === col);
+                if (tileData && tileData.material) {
+                    tileData.material.emissiveIntensity = intensity;
+                    tileData.material.emissive.setHex(colorHex);
+                }
+            }
+            function clearHighlight() {
+                tiles.forEach(tile => {
+                    if (tile.material) {
+                        tile.material.emissiveIntensity = 0;
+                        tile.material.emissive.setHex(0x000000);
+                    }
+                });
+            }
+            function highlightPossibleMoves(moves) {
+                clearHighlight();
+                if (!moves) return;
+                moves.forEach(move => {
+                    if (move.toRow !== undefined && move.toCol !== undefined) {
+                        highlightTile(move.toRow, move.toCol, 0.7, 0x44aa44);
+                    }
+                });
+                if (selectedRow !== null && selectedCol !== null) {
+                    highlightTile(selectedRow, selectedCol, 0.85, 0xdd8800);
+                }
+            }
+
+            // ========== ОБРАБОТКА КЛИКОВ (работает на телефоне и ПК) ==========
+            function getCellFromCoordinates(clientX, clientY) {
+                const rect = renderer.domElement.getBoundingClientRect();
+                const mouse = new THREE.Vector2();
+                mouse.x = (clientX / rect.width) * 2 - 1;
+                mouse.y = -(clientY / rect.height) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(tiles.map(t => t.mesh));
+                if (intersects.length > 0) {
+                    const hit = intersects[0].object;
+                    const tileData = tiles.find(t => t.mesh === hit);
+                    if (tileData) return { row: tileData.row, col: tileData.col };
+                }
+                return null;
+            }
+
+            async function handleGameInteraction(clientX, clientY) {
+                initAudio();
+                if (paused || gameOver) return;
+                if (onlineMode && whoseTurn !== myColor) {
+                    showToast("Сейчас ход соперника", 800);
+                    return;
+                }
+                if (!onlineMode && whoseTurn !== playerColor) return;
+
+                const cell = getCellFromCoordinates(clientX, clientY);
+                if (!cell) { clearSelection(); return; }
+                const { row, col } = cell;
+
+                if (selectedRow === null) {
+                    const piece = board[row][col];
+                    const isMyPiece = onlineMode 
+                        ? ((myColor === 'white' && (piece === 1 || piece === 2)) || (myColor === 'black' && (piece === -1 || piece === -2)))
+                        : ((playerColor === 'white' && (piece === 1 || piece === 2)) || (playerColor === 'black' && (piece === -1 || piece === -2)));
+                    if (isMyPiece) {
+                        const playerNumeric = onlineMode ? (myColor === 'white' ? 1 : -1) : (playerColor === 'white' ? 1 : -1);
+                        const moves = getAllMovesForPlayerState(board, playerNumeric);
+                        const validFrom = moves.filter(m => m.fromRow === row && m.fromCol === col);
+                        if (validFrom.length) {
+                            selectedRow = row;
+                            selectedCol = col;
+                            possibleMoves = validFrom;
+                            highlightPossibleMoves(possibleMoves);
+                            showToast(`Выбрана фигура на ${String.fromCharCode(65+col)}${8-row}`, 800);
+                        } else {
+                            showToast(`Нет доступных ходов`, 800);
+                            clearSelection();
+                        }
+                    } else {
+                        clearSelection();
+                    }
+                } else {
+                    let found = null;
+                    for (let move of possibleMoves) {
+                        if (move.toRow === row && move.toCol === col) {
+                            found = move;
+                            break;
+                        }
+                    }
+                    if (found) {
+                        await executeMove(found, false);
+                        clearSelection();
+                    } else {
+                        clearSelection();
+                        showToast(`Невозможный ход`, 800);
+                    }
+                }
+            }
+
+            function setupEventHandlers() {
+                // Используем pointerdown для максимальной совместимости с сенсором
+                renderer.domElement.addEventListener('pointerdown', (event) => {
+                    event.preventDefault(); // предотвращаем масштабирование страницы, но click всё равно сработает
+                    handleGameInteraction(event.clientX, event.clientY);
+                });
+            }
+
+            function clearSelection() {
+                selectedRow = null;
+                selectedCol = null;
+                possibleMoves = [];
+                clearHighlight();
+            }
+
+            function updateStatus() {
+                if (gameOver) return;
+                if (onlineMode) {
+                    if (whoseTurn === myColor) showToast("Ваш ход", 800);
+                    else showToast("Ход соперника...", 800);
+                } else {
+                    if (whoseTurn === playerColor) showToast("Ваш ход", 800);
+                    else showToast("Бот думает...", 800);
+                }
+            }
+
+            // ========== НОВАЯ ИГРА (с ботом) ==========
+            function resetGame() {
+                for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) board[i][j] = 0;
+                for (let row = 0; row < 2; row++)
+                    for (let col = 0; col < 8; col++)
+                        if ((row+col)%2===1) board[row][col] = -1;
+                for (let row = 6; row < 8; row++)
+                    for (let col = 0; col < 8; col++)
+                        if ((row+col)%2===1) board[row][col] = 1;
+
+                botColor = (playerColor === 'white') ? 'black' : 'white';
+                whoseTurn = 'white';
+                gameOver = false;
+                clearSelection();
+                updateAllPieces();
+                updateStatus();
+                // Не показываем кнопки здесь – они показываются только при старте игры
+            }
+
+            // ========== WEB SOCKET (ОНЛАЙН) – автоматический выбор хоста ==========
+            function getWebSocketUrl() {
+                const hostname = window.location.hostname;
+                return `ws://${hostname}:8082`;
+            }
+
+            function connectWebSocket(callback) {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    if (callback) callback();
+                    return;
+                }
+                const wsUrl = getWebSocketUrl();
+                ws = new WebSocket(wsUrl);
+                ws.onopen = () => {
+                    updateWsStatus('подключён');
+                    showToast("Соединение с сервером установлено", 2000);
+                    if (callback) callback();
+                };
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    handleWsMessage(data);
+                };
+                ws.onclose = () => {
+                    updateWsStatus('отключён');
+                    if (onlineMode) {
+                        showToast("Соединение потеряно. Игра завершена.");
+                        onlineMode = false;
+                        returnToMainMenu();
+                    }
+                };
+                ws.onerror = (err) => {
+                    console.error("WebSocket ошибка", err);
+                    updateWsStatus('ошибка');
+                    showToast(`Не удалось подключиться к серверу (${wsUrl}). Убедитесь, что сервер запущен и вы открыли страницу по IP компьютера.`, 5000);
+                };
+            }
+
+            function handleWsMessage(data) {
+                switch (data.type) {
+                    case 'created':
+                        roomCode = data.roomCode;
+                        document.getElementById('roomCodeDisplay').value = roomCode;
+                        document.getElementById('inviteModal').style.display = 'flex';
+                        waitingForOpponent = true;
+                        showToast(`Комната создана. Код: ${roomCode}. Ждите соперника...`, 5000);
+                        break;
+                    case 'start':
+                        onlineMode = true;
+                        myColor = data.color;
+                        roomCode = data.roomCode;
+                        whoseTurn = 'white';
+                        gameOver = false;
+                        clearSelection();
+                        resetGame();
+                        showControlButtons(true);  // показываем кнопки управления
+                        if (myColor === 'black') {
+                            showToast("Вы играете чёрными. Ждите ход белых.", 3000);
+                        } else {
+                            showToast("Вы играете белыми. Ваш ход.", 3000);
+                        }
+                        waitingForOpponent = false;
+                        updateStatus();
+                        break;
+                    case 'opponentMove':
+                        if (!onlineMode) return;
+                        const move = data.move;
+                        applyRemoteMove(move);
+                        break;
+                    case 'opponentGameOver':
+                        finishGame(data.result === 'win' ? 'loss' : 'win');
+                        break;
+                    case 'opponentDisconnected':
+                        showToast("Соперник отключился. Игра окончена.");
+                        onlineMode = false;
+                        returnToMainMenu();
+                        break;
+                    case 'error':
+                        showToast(data.message);
+                        break;
+                }
+            }
+
+            async function applyRemoteMove(move) {
+                await animateMove(move.fromRow, move.fromCol, move.toRow, move.toCol, () => {});
+                playSound('move');
+                applyMoveToBoardState(board, move);
+                updateAllPieces();
+
+                const whiteHasMoves = !isGameOverState(board, 1);
+                const blackHasMoves = !isGameOverState(board, -1);
+                if (!whiteHasMoves || !blackHasMoves) {
+                    let winnerColor = null;
+                    if (!whiteHasMoves) winnerColor = 'black';
+                    else if (!blackHasMoves) winnerColor = 'white';
+                    if (winnerColor) {
+                        const playerWon = (myColor === winnerColor);
+                        finishGame(playerWon ? 'win' : 'loss');
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify({ type: 'gameOver', roomCode, result: playerWon ? 'win' : 'loss' }));
+                        }
+                        return;
+                    }
+                }
+
+                whoseTurn = (whoseTurn === 'white') ? 'black' : 'white';
+                updateStatus();
+            }
+
+            function createOnlineGame() {
+                connectWebSocket(() => {
+                    ws.send(JSON.stringify({ type: 'create' }));
+                    document.getElementById('titleScreen').classList.add('hidden');
+                    showControlButtons(true);
+                });
+            }
+
+            function joinOnlineGame(code) {
+                connectWebSocket(() => {
+                    ws.send(JSON.stringify({ type: 'join', roomCode: code }));
+                    document.getElementById('titleScreen').classList.add('hidden');
+                    showControlButtons(true);
+                });
+            }
+
+            function inviteFriend() {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    createOnlineGame();
+                } else {
+                    showToast("Сначала дождитесь подключения к серверу", 2000);
+                }
+            }
+
+            // ========== НАСТРОЙКИ ИНТЕРФЕЙСА ==========
+            document.getElementById('statsBtn').onclick = () => { updateStatsModalUI(); statsModal.style.display='flex'; };
+            document.getElementById('settingsBtn').onclick = () => { settingsModal.style.display='flex'; };
+            document.getElementById('newGameBtn').onclick = () => {
+                if (ws) ws.close();
+                onlineMode = false;
+                myColor = null;
+                resetGame();
+                document.getElementById('titleScreen').classList.add('hidden');
+                paused = false;
+                cameraFrozen = false;
+                controls.enabled = true;
+                freezeBtn.textContent = '❄️ Заморозить доску';
+                pauseBtn.textContent = '⏸️ Пауза';
+                resetCamera();
+                updateWsStatus('не подключён');
+                showControlButtons(true);
+                connectWebSocket(); // переподключаем для будущих онлайн-игр
+            };
+            document.getElementById('inviteFriendBtn').onclick = () => inviteFriend();
+            document.getElementById('joinOnlineBtn').onclick = () => {
+                const code = document.getElementById('joinCodeInput').value.trim();
+                if (!code) { showToast("Введите код комнаты", 1500); return; }
+                joinOnlineGame(code);
+            };
+            document.getElementById('copyRoomCodeBtn').onclick = () => {
+                const codeInput = document.getElementById('roomCodeDisplay');
+                if (!codeInput.value) return;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(codeInput.value).then(() => showToast("Код скопирован!", 1500));
+                } else {
+                    codeInput.select();
+                    document.execCommand('copy');
+                    showToast("Код скопирован", 1500);
+                }
+            };
+            document.getElementById('closeInviteModalBtn').onclick = () => { inviteModal.style.display = 'none'; };
+            document.querySelectorAll('.close-modal').forEach(btn => btn.onclick = (e) => {
+                const modal = btn.closest('.modal');
+                if (modal) modal.style.display = 'none';
+            });
+            window.onclick = (e) => {
+                if (e.target === statsModal) statsModal.style.display = 'none';
+                if (e.target === settingsModal) settingsModal.style.display = 'none';
+                if (e.target === inviteModal) inviteModal.style.display = 'none';
+            };
+
+            const volSlider = document.getElementById('volumeSlider');
+            const speedSlider = document.getElementById('speedSlider');
+            volSlider.oninput = (e) => { volume = e.target.value; document.getElementById('volumeVal').innerText=volume+'%'; };
+            speedSlider.oninput = (e) => { moveSpeed = parseFloat(e.target.value); document.getElementById('speedVal').innerText=moveSpeed.toFixed(2)+'x'; };
+
+            document.querySelectorAll('.difficulty-option').forEach(opt => {
+                opt.onclick = () => {
+                    document.querySelectorAll('.difficulty-option').forEach(o=>o.classList.remove('active'));
+                    opt.classList.add('active');
+                    currentDifficulty = opt.getAttribute('data-diff');
+                    showToast(`Сложность: ${currentDifficulty === 'easy' ? 'Легкий' : currentDifficulty === 'medium' ? 'Средний' : 'Сложный'}`);
+                    if (!onlineMode) resetGame();
+                };
+            });
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.onclick = () => {
+                    document.querySelectorAll('.color-option').forEach(o=>o.classList.remove('active'));
+                    opt.classList.add('active');
+                    playerColor = opt.getAttribute('data-color');
+                    showToast(`Игрок играет ${playerColor === 'white' ? 'белыми' : 'чёрными'}`);
+                    if (!onlineMode) resetGame();
+                };
+            });
+
+            const pauseBtn = document.getElementById('pauseButton');
+            pauseBtn.onclick = () => {
+                if (gameOver) return;
+                paused = !paused;
+                pauseBtn.textContent = paused ? '▶️ Играть' : '⏸️ Пауза';
+                showToast(paused ? 'Игра заморожена' : 'Игра продолжается');
+                if (!paused && !onlineMode && whoseTurn === botColor && !gameOver) setTimeout(() => botMove(), 200);
+            };
+
+            const freezeBtn = document.getElementById('freezeCameraBtn');
+            freezeBtn.onclick = () => {
+                cameraFrozen = !cameraFrozen;
+                controls.enabled = !cameraFrozen;
+                freezeBtn.textContent = cameraFrozen ? '🔥 Разморозить' : '❄️ Заморозить доску';
+                showToast(cameraFrozen ? 'Доска зафиксирована' : 'Управление камерой восстановлено');
+            };
+
+            const exitBtn = document.getElementById('exitToMenuBtn');
+            exitBtn.onclick = () => {
+                returnToMainMenu();
+                onlineMode = false;
+                myColor = null;
+                roomCode = null;
+                waitingForOpponent = false;
+                gameOver = false;
+                paused = false;
+                cameraFrozen = false;
+                controls.enabled = true;
+                freezeBtn.textContent = '❄️ Заморозить доску';
+                pauseBtn.textContent = '⏸️ Пауза';
+                resetCamera();
+                showControlButtons(false);
+                document.getElementById('titleScreen').classList.remove('hidden');
+                resetGame();
+            };
+
+            document.getElementById('gameOverOkBtn').onclick = () => returnToMainMenu();
+            document.getElementById('closeGameOverModal').onclick = () => returnToMainMenu();
+
+            // ========== ЗАПУСК ==========
+            init3D();
+            setupEventHandlers();
+            resetGame();
+            updateStatsModalUI();
+            connectWebSocket();
+            showToast("Добро пожаловать! Сервер WebSocket подключается...", 3000);
+            showControlButtons(false);
+        } catch (err) {
+            console.error("Ошибка при загрузке игры:", err);
+            alert("Произошла ошибка: " + err.message);
+        }
+    </script>
+</body>
+</html>
